@@ -34,6 +34,7 @@ def main(args=None):
 
     calibration_file = "./resources/ebt_calibration_lot03172103_RED.pkl"
     data_dir = "/home/bassler/Desktop/20230427_EBT/"
+    # test dataset 20230427_EBT.tar.gz will be provided somewhere
 
     # Load images
     pre_image = RSImage([os.path.join(data_dir, fn) for fn in pre_filenames])
