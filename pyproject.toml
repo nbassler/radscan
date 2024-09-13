@@ -12,7 +12,8 @@ readme = "README.md"
 dependencies = [
     "numpy>=1.21",
     "tifffile>=2021.7.2",
-    "roifile>=1.0.1"
+    "roifile>=1.0.1",
+    "scipy>=1.7.0"
 ]
 
 [project.optional-dependencies]
