@@ -2,7 +2,7 @@ import os
 import logging
 import matplotlib.pyplot as plt
 from radscan import RSImage, ROI
-from workflow import analyze_simple_roi, analyze_simple_image
+from radscan.workflow import analyze_simple_roi, analyze_simple_image
 
 logger = logging.getLogger(__name__)
 
@@ -32,30 +32,28 @@ def main(args=None):
     roi_pre_filename = "RoiSet_pre1.zip"
     roi_post_filename = "RoiSet_post1.zip"
 
-    calibration_file = "/home/bassler/Documents/calibration.pkl"
+    calibration_file = "./resources/ebt_calibration_lot03172103_RED.pkl"
     data_dir = "/home/bassler/Desktop/20230427_EBT/"
 
     # Load images
     pre_image = RSImage([os.path.join(data_dir, fn) for fn in pre_filenames])
     post_image = RSImage([os.path.join(data_dir, fn) for fn in post_filenames])
 
-    # Load ROIs
+    # Load ROIs and attach them to the images
     roi_pre = ROI(os.path.join(data_dir, roi_pre_filename))
     roi_post = ROI(os.path.join(data_dir, roi_post_filename))
-
-    # Attach ROIs to images
+    # can also be set manually, if no ROI file is available
     pre_image.rois = roi_pre.rois
     post_image.rois = roi_post.rois
 
     # Simple analysis by ROI
     results_by_roi = analyze_simple_roi(
         pre_image, post_image, calibration_file)
-    logger.debug(f"Results by ROI: {results_by_roi}")
+    print(f"Results by ROI: {results_by_roi}")
 
-    # Simple analysis by image
+    # Simple analysis by 2D image
     results_by_image = analyze_simple_image(
         pre_image, post_image, calibration_file)
-    logger.debug(f"Results by image: {results_by_image}")
 
     # Plot the full-image results and save it to file
     plot_results(results_by_image, dpi=300, pixel_size=0.1,
@@ -81,16 +79,14 @@ def plot_results(results, dpi, pixel_size, plot_type="image", save=None):
 
     if plot_type == "image":
         # Plot the full 2D dose map
-        plt.imshow(results, vmin=0.0, vmax=4.0, cmap="gist_ncar")
+        plt.imshow(results, vmin=0.0, vmax=22.0, cmap="gist_ncar")
         cb = plt.colorbar()
         cb.set_label("Dose [Gy]")
-        plt.xlabel(f"X axis (mm)")
-        plt.ylabel(f"Y axis (mm)")
+        plt.xlabel(f"X axis [pixels]")
+        plt.ylabel(f"Y axis [pixels]")
+        # TODO: set axis scales to mm instead of pixels
         plt.title("Dose Distribution")
         plt.gca().set_aspect('auto')
-
-        # Adjust the figure size to reflect mm dimensions
-        plt.gcf().set_size_inches(width_in_mm / 25.4, height_in_mm / 25.4)
 
     elif plot_type == "roi":
         # Plot ROI-based dose results as a bar chart

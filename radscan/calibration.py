@@ -75,7 +75,8 @@ class Calibration:
     @staticmethod
     def load(filename):
         """
-        Loads a saved calibration object from disk.
+        Loads a saved calibration object from disk using the custom unpickler to handle
+        renamed modules.
 
         Args:
             filename (str): The path to the calibration file.
@@ -90,7 +91,7 @@ class Calibration:
         logging.debug(f"Loading calibration from {filename}")
         try:
             with open(filename, 'rb') as f:
-                return pickle.load(f)
+                return CustomUnpickler(f).load()
         except FileNotFoundError as e:
             logger.error(f"File not found: {filename}")
             raise e
@@ -127,3 +128,29 @@ class Calibration:
         """
         netOD = np.asarray(netOD)
         return self.func(netOD, *self.fitparams)
+
+
+# fix for old pickle files:import pickle
+
+class CustomUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        # Remap 'calibration' to 'radscan.calibration'
+        if module == 'calibration':
+            module = 'radscan.calibration'
+        return super().find_class(module, name)
+
+
+def load(filename):
+    """
+    Loads a saved calibration object from disk using the custom unpickler to handle
+    renamed modules.
+
+    Args:
+        filename (str): The path to the calibration file.
+
+    Returns:
+        Calibration: The loaded calibration object.
+    """
+    logging.debug(f"Loading calibration from {filename}")
+    with open(filename, 'rb') as f:
+        return CustomUnpickler(f).load()
