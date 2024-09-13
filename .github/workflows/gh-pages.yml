@@ -1,4 +1,4 @@
-name: Deploy RadScan Docs to GitHub Pages
+name: Deploy Sphinx Docs to GitHub Pages
 
 on:
   push:
@@ -11,17 +11,17 @@ jobs:
 
     steps:
     - name: Check out the repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.x'
 
     - name: Install dependencies
       run: |
         pip install sphinx
-        pip install -r requirements.txt  # Optional, if you have additional requirements
+        pip install -r requirements.txt  # Optional, if you have a requirements file
 
     - name: Build the docs
       run: |
