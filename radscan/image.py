@@ -33,38 +33,71 @@ class RSImage:
 
     def __init__(self, fn, rois=None):
         """
-        Initializes the RSImage class by loading the TIFF image, extracting metadata, and optionally setting ROIs.
+        Initializes the RSImage class by loading one or more TIFF images, extracting metadata, and optionally setting ROIs.
 
         Args:
-            fn (str): The path to the TIFF image file.
+            fn (str or list): The path to the TIFF image file, or a list of file paths to average.
             rois (list, optional): A list of tuples specifying Regions of Interest (ROIs) as (xmin, xmax, ymin, ymax).
                                    Defaults to an empty list if no ROI is provided.
         """
         self.fn = fn
         self.rois = rois if rois is not None else []
 
-        # Load image and metadata during initialization
-        with tifffile.TiffFile(fn) as tif:
-            self.image = tif.asarray()
-            self.metadata = {tag.name: tag.value for tag in tif.pages[0].tags}
+        if isinstance(fn, list):
+            # Load multiple images and compute the average
+            self.image, self.metadata = self._load_and_average_images(fn)
+        else:
+            # Load a single image
+            with tifffile.TiffFile(fn) as tif:
+                self.image = tif.asarray()
+                self.metadata = {
+                    tag.name: tag.value for tag in tif.pages[0].tags}
 
-            # Log metadata for debugging purposes
-            logger.debug(f"Loaded TIFF file: {self.fn}")
-            logger.debug("Metadata:")
-            for key, value in self.metadata.items():
-                logger.debug(f"{key}: {value}")
+        # Log metadata for debugging purposes
+        logger.debug(f"Loaded TIFF file(s): {self.fn}")
+        logger.debug("Metadata:")
+        for key, value in self.metadata.items():
+            logger.debug(f"{key}: {value}")
 
-    def analyze(self, rois=None, channel=0):
+    def _load_and_average_images(self, file_list):
+        """
+        Load multiple TIFF images, compute the average, and return the averaged image and metadata.
+
+        Args:
+            file_list (list): A list of file paths to TIFF images.
+
+        Returns:
+            tuple: Averaged image as a NumPy array, and metadata from the first image.
+        """
+        images = []
+        for fn in file_list:
+            with tifffile.TiffFile(fn) as tif:
+                images.append(tif.asarray())
+            logger.debug(f"Loaded image: {fn}")
+
+        # Compute the average image over all loaded images
+        average_image = np.mean(np.stack(images), axis=0)
+
+        # Use metadata from the first image
+        with tifffile.TiffFile(file_list[0]) as tif:
+            metadata = {tag.name: tag.value for tag in tif.pages[0].tags}
+
+        return average_image, metadata
+
+    def analyze(self, rois=None, channel=0, single=False):
         """
         Analyze all or selected Regions of Interest (ROIs) within the image.
 
         Args:
-            rois (list, optional): A list of tuples specifying ROIs as (xmin, xmax, ymin, ymax). If None,
-                                   the method will use self.rois.
+            rois (list, optional): A list of tuples specifying ROIs as (xmin, xmax, ymin, ymax).
+                                If None, the method will use self.rois.
             channel (int): The color channel to analyze. Default is 0 (Red for color images).
+            single (bool, optional): If True, returns a single mean value averaged over all ROIs.
+                                    If False, returns a list of values, one for each ROI. Default is False.
 
         Returns:
-            list: A list of tuples containing (mean, stderr, minval, maxval) for each ROI.
+            list or tuple: If single=False, returns a list of (mean, stderr, minval, maxval) for each ROI.
+                        If single=True, returns a tuple (mean, stderr, minval, maxval) averaged over all ROIs.
         """
 
         rois_to_analyze = rois if rois is not None else self.rois
@@ -85,6 +118,14 @@ class RSImage:
             stderr = stddev / np.sqrt(np.size(_imc))
 
             results.append((mean, stderr, np.min(_imc), np.max(_imc)))
+
+        # If single=True, return a single averaged result over all ROIs
+        if single:
+            means = [r[0] for r in results]
+            stderrs = [r[1] for r in results]
+            minvals = [r[2] for r in results]
+            maxvals = [r[3] for r in results]
+            return (np.mean(means), np.mean(stderrs), np.min(minvals), np.max(maxvals))
 
         return results
 

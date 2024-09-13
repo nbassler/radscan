@@ -62,6 +62,9 @@ class Calibration:
         Args:
             filename (str, optional): Filename to save the calibration object. Defaults to
                                       'ebt_calibration_lot{lot_number}_{channel}.pkl'.
+
+        Note:
+            The object is saved using pickle with the highest protocol available (`pickle.HIGHEST_PROTOCOL`).
         """
         if not filename:
             filename = f"ebt_calibration_lot{self.lot}_{self.channel}.pkl"
@@ -79,10 +82,21 @@ class Calibration:
 
         Returns:
             Calibration: The loaded calibration object.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            pickle.UnpicklingError: If loading the file fails.
         """
         logging.debug(f"Loading calibration from {filename}")
-        with open(filename, 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open(filename, 'rb') as f:
+                return pickle.load(f)
+        except FileNotFoundError as e:
+            logger.error(f"File not found: {filename}")
+            raise e
+        except (pickle.UnpicklingError, EOFError) as e:
+            logger.error(f"Error loading file: {filename}. Reason: {e}")
+            raise e
 
     @staticmethod
     def func(netOD, a=20, b=40, c=3):
@@ -91,13 +105,13 @@ class Calibration:
         Dw = a * netOD + b * netOD^c
 
         Args:
-            netOD (float or np.ndarray): Net Optical Density.
+            netOD (float or np.ndarray): Net Optical Density. Can be a scalar or a 1D/2D array.
             a (float, optional): Fitted parameter. Defaults to 20.
             b (float, optional): Fitted parameter. Defaults to 40.
             c (float, optional): Fitted parameter. Defaults to 3.
 
         Returns:
-            float or np.ndarray: Dose in Gy.
+            float or np.ndarray: Dose in Gy. If `netOD` is an array, a corresponding array of dose values is returned.
         """
         return a * netOD + b * np.power(netOD, c)
 
@@ -106,7 +120,7 @@ class Calibration:
         Calculates the dose (in Gy) for a given NetOD value using the fitted calibration curve.
 
         Args:
-            netOD (float or np.ndarray): The NetOD value(s) to convert to dose.
+            netOD (float or np.ndarray): The NetOD value(s) to convert to dose. Can be a scalar or an array.
 
         Returns:
             float or np.ndarray: The corresponding dose in Gy.
