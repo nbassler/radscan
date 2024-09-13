@@ -1,11 +1,12 @@
-import numpy as np
 import tifffile
 import logging
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
-class EBTImage:
+class RSImage:
     """
     A class to handle EBT film scans, load TIFF images, extract metadata, and work with ROIs.
 
@@ -32,7 +33,7 @@ class EBTImage:
 
     def __init__(self, fn, rois=None):
         """
-        Initializes the EBTImage class by loading the TIFF image, extracting metadata, and optionally setting ROIs.
+        Initializes the RSImage class by loading the TIFF image, extracting metadata, and optionally setting ROIs.
 
         Args:
             fn (str): The path to the TIFF image file.
@@ -65,6 +66,7 @@ class EBTImage:
         Returns:
             list: A list of tuples containing (mean, stderr, minval, maxval) for each ROI.
         """
+
         rois_to_analyze = rois if rois is not None else self.rois
 
         if not rois_to_analyze:
@@ -93,6 +95,7 @@ class EBTImage:
         Args:
             channel (int, optional): The color channel to display. Default is 0 (Red for color images).
         """
+
         import matplotlib.pyplot as plt
 
         _image = self.image[:, :, channel]
@@ -110,6 +113,7 @@ class EBTImage:
                                    the method will use self.rois.
             channel (int, optional): The color channel to display. Default is 0 (Red for color images).
         """
+
         import matplotlib.pyplot as plt
 
         rois_to_show = rois if rois is not None else self.rois

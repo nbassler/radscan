@@ -6,7 +6,7 @@ import logging
 
 # Import necessary modules from the RadScan package
 from radscan.calibration import Calibration
-from radscan.image import EBTImage
+from radscan.image import RSImage
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def main(args=None):
     print(resources_dir)
 
     # Load the TIFF image
-    # image = EBTImage(example_tiff)
+    # image = RSImage(example_tiff)
 
     # Analyze the image (placeholder for user)
     # result = image.analyze(roi=(50, 100, 50, 100))

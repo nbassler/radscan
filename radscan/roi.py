@@ -59,6 +59,7 @@ class ROI:
         # Log the loaded ROIs for debugging purposes
         logger.debug(f"Loaded {len(rois)} ROIs from {fn}")
         for i, roi in enumerate(rois):
-            logger.debug(f"ROI {i+1}: Left={roi[0]}, Right={roi[1]}, Top={roi[2]}, Bottom={roi[3]}")
+            logger.debug(
+                f"ROI {i+1}: Left={roi[0]}, Right={roi[1]}, Top={roi[2]}, Bottom={roi[3]}")
 
         return rois
