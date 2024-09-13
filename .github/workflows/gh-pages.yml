@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install sphinx
-        pip install -r requirements.txt  # Optional, if you have a requirements file
+        # pip install -r requirements.txt  # Optional, if you have a requirements file
 
     - name: Build the docs
       run: |
