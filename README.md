@@ -11,7 +11,7 @@ Features:
 
 ![image](https://github.com/user-attachments/assets/1151eafd-f3ba-41f1-aa7e-de59b396f228)
 
-Calibration curve for RED channel:
+Calibration curve example (RED channel):
 ![image](https://github.com/user-attachments/assets/e3d7eb3e-967b-4f58-8d6f-7445e44e8cd4)
 
 
