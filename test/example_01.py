@@ -1,22 +1,27 @@
 import os
 import logging
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from radscan import RSImage, ROI, Calibration
-from radscan.workflow import analyze_simple_roi, analyze_simple_image, analyze_image, analyze_roi
+
+from radscan import RSImage, ROI
+# from radscan import Calibration # only needed if we want to plot the calibration curve
+from radscan.workflow import analyze_simple_image, analyze_simple_roi
 
 logger = logging.getLogger(__name__)
 
 
 def main(args=None):
     """
-    Main entry point for RadScan tool.
+    Example of using the RadScan tool to analyze EBT film images.
+    This is the simple example, which does not include background correction
+    and control films.
     """
 
-    # Setup logging to show debug info
+    # Setup logging.
     logging.basicConfig(level=logging.INFO)
 
-    # Filenames and directories
+    # Setup filenames and directories
 
     # working directory with the input images and ROIs are located:
     # test dataset 20230427_EBT.tar.gz will be provided somewhere in the future.
@@ -29,8 +34,7 @@ def main(args=None):
         "img20230424_13245545.tif",
         "img20230424_13251336.tif"
     ]
-
-    # in this case there are several regoings of interest in the image.
+    # in this case there are several regions of interest in the image.
     # the ROIs we marked in ImageJ, and then saved by ImageJ as a zip file.
     # should it be a single ROI, then it has suffix .roi, which is also OK.
     roi_pre_filename = "RoiSet_pre1.zip"
@@ -42,19 +46,22 @@ def main(args=None):
         "img20230427_11191783.tif",
         "img20230427_11193478.tif"
     ]
-
     # ROI size and positions do not have to match the pre-irradiation ROIs.
-    # However, the number of ROIs must match the number of ROIs in the pre-irradiation image.
+    # However, the _number_ (that is the index) of each ROIs
+    # must match the number (index) of ROIs in the pre-irradiation image.
+    # The length of the ROI list must be the same in both pre and post images.
     roi_post_filename = "RoiSet_post1.zip"
 
-    # Calibration file, which is a pickle file containing the calibration data.
-    # It is also possible to use the Calibration class to make a new set, but here we assume this is already done.
+    # Next, set the calibration file, which is a pickle file containing a calibration dataset
+    # It is also possible to use the Calibration class to make a new set, but for this example it is already done.
+    # WARNING:
+    # The calibration file used here is for the complex analysis, so it will not yield correct results.
     calibration_file = "./resources/ebt_calibration_lot03172103_RED.pkl"
-    channel = 0
+    channel = 0  # 0=RED channel, 1=GREEN, 2=BLUE
 
-    # plot calibration curve:
+    # If you want to plot the calibration curve, you can do so with the following line:
     # calibration = Calibration.load(calibration_file)
-    # calibration.plot(save="calibration_curve_RED.png")
+    # calibration.plot()
 
     # Load images
     pre_image = RSImage([os.path.join(data_dir, fn) for fn in pre_filenames])
@@ -71,56 +78,20 @@ def main(args=None):
     pre_image.rois = roi_pre.rois
     post_image.rois = roi_post.rois
 
-    # Simple analysis by ROI, which means, each ROI an average dose is calculated:
+    # Now we have all input data available, so we can proceed with the analysis.
+    # First we do a simple analysis by ROI, which means, each ROI an average dose is calculated:
     results_by_roi = analyze_simple_roi(
         pre_image, post_image, calibration_file, channel)
     for idx, dose in enumerate(results_by_roi):
         logger.info(f"ROI {idx+1}: {dose:.2f} Gy")
 
-    # But alternatively, we can also do a full image analysis, which means, the full post_image is converted from pixel_values to dose:
-    results_by_image_netod = analyze_simple_image(
-        pre_image, post_image, channel=channel)
-    results_by_image_dose = analyze_simple_image(
-        pre_image, post_image, calibration_file, channel)
-
-    print(pre_image.rois)
-
-    # exit()
+    # But alternatively, we can also do a full 2D-image analysis,
+    # which means, the full post_image is converted from pixel_values to dose, using the calibration curve:
+    results_by_image_dose = analyze_simple_image(pre_image, post_image,
+                                                 calibration_file, channel)
 
     # Plot the full-image dose map
-    # plot_results(results_by_image_netod, dpi=300,
-    #             pixel_size=0.1, rois=roi_post.rois, vmax=1.0)
-    # plot_results(results_by_image_dose, dpi=300,
-    #              pixel_size=0.1, rois=roi_post.rois)
-    # Plot the full-image dose map and save it to file
-    # plot_results(results_by_image, dpi=300, pixel_size=0.1,
-    #             save="dose_distribution.png")
-
-    # now let us try the complicated method, here you also need background and control images.
-    # background_image = RSImage([os.path.join(data_dir, "background.tif")])
-    # control_pre_image = RSImage([os.path.join(data_dir, "control_pre.tif")])
-    # control_post_image = RSImage([os.path.join(data_dir, "control_post.tif")])
-
-    back_filenames = ["img20230504_09342060.tif",
-                      "img20230504_09344731.tif",
-                      "img20230504_09351256.tif",
-                      "img20230504_09353762.tif"]
-    background_image = RSImage([os.path.join(data_dir, fn)
-                               for fn in back_filenames])
-
-    # for the control images we will use the pre image for both pre and post control images.
-    control_pre_image = pre_image
-    control_post_image = pre_image
-
-    roi_background_filename = "RoiSet_back.zip"
-    roi_back = ROI(os.path.join(data_dir, roi_background_filename))
-    background_image.rois = roi_back.rois
-
-    # pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
-    results_by_image_netod = analyze_image(pre_image, post_image, control_pre_image,
-                                           control_post_image, background_image, calibration_file, channel)
-    # Plot the full-image dose map
-    plot_results(results_by_image_netod, dpi=300,
+    plot_results(results_by_image_dose, dpi=300,
                  pixel_size=0.1, rois=roi_post.rois, vmax=22.0)
 
 
@@ -137,19 +108,14 @@ def plot_results(results, dpi, pixel_size, plot_type="image", save=None, rois=No
         save (str, optional): If provided, the plot will be saved to the given filename instead of being displayed.
     """
 
-    # Convert pixel indices to mm using the pixel size
+    # TODO: Convert pixel indices to mm using the pixel size
     height_in_mm = results.shape[0] * pixel_size
     width_in_mm = results.shape[1] * pixel_size
 
     if not vmax:
-        vmax = results.max()
-        print(vmax)
-        print(results.min())
-        print(results.shape)
+        vmax = results.max()  # TODO: eliminate NaN values from results array
 
     if plot_type == "image":
-        # Set vmin and vmax based on actual min/max values of the results array
-
         # Plot the full 2D dose map with proper vmin and vmax
         plt.imshow(results, vmin=0, vmax=vmax, cmap="gist_ncar")
         cb = plt.colorbar()

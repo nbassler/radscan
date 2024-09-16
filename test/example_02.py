@@ -1,4 +1,5 @@
 import os
+import copy
 import logging
 
 import matplotlib.pyplot as plt
@@ -97,8 +98,8 @@ def main(args=None):
     # The control images are taken before and after the irradiation.
 
     # in this case, the pre and post data is stored in the same file, but in a single ROI.
-    control_pre_image = pre_image.deepcopy()
-    control_post_image = post_image.deepcopy()
+    control_pre_image = copy.deepcopy(pre_image)
+    control_post_image = copy.deepcopy(post_image)
     # the last ROI is the control ROI:
     control_pre_image.rois = [pre_image.rois[-1]]
     control_post_image.rois = [post_image.rois[-1]]
