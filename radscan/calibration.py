@@ -72,6 +72,52 @@ class Calibration:
             logging.debug(f"Saving calibration to {filename}")
             pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+    def dose(self, netOD):
+        """
+        Calculates the dose (in Gy) for a given NetOD value using the fitted calibration curve.
+
+        Args:
+            netOD (float or np.ndarray): The NetOD value(s) to convert to dose. Can be a scalar or an array.
+
+        Returns:
+            float or np.ndarray: The corresponding dose in Gy.
+        """
+        netOD = np.asarray(netOD)
+        return self.func(netOD, *self.fitparams)
+
+    def plot(self, netODmin=0, netODmax=1.1, save=None):
+        """
+        Plots the calibration curve based on the fitted parameters.
+
+        Args:
+            netODmin (float, optional): The minimum NetOD value to plot. Defaults to 0.
+            netODmax (float, optional): The maximum NetOD value to plot. Defaults to 2.0.
+            save (str, optional): If provided, saves the plot to the specified file. Otherwise, displays the plot.
+        """
+        import matplotlib.pyplot as plt
+        # Generate a range of NetOD values for the plot
+        netOD_values = np.linspace(netODmin, netODmax, 100)
+        dose_values = self.dose(netOD_values)
+
+        # Create the plot
+        plt.figure(figsize=(6, 4))
+        plt.plot(self.nods, self.ds, 'ro',
+                 label="Data points (NetOD vs. Dose)")
+        plt.plot(netOD_values, dose_values, 'b-',
+                 label=f"Calibration curve\n{self.fitstr}")
+        plt.xlabel("Net Optical Density (NetOD)")
+        plt.ylabel("Dose (Gy)")
+        plt.title(f"Calibration Curve - Lot {self.lot}")
+        plt.legend(loc="best")
+        plt.grid(True)
+
+        # Save or show the plot
+        if save:
+            plt.savefig(save)
+            logger.debug(f"Calibration plot saved to {save}")
+        else:
+            plt.show()
+
     @staticmethod
     def load(filename):
         """

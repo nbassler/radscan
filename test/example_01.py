@@ -1,8 +1,9 @@
 import os
 import logging
 import matplotlib.pyplot as plt
-from radscan import RSImage, ROI
-from radscan.workflow import analyze_simple_roi, analyze_simple_image
+import matplotlib.patches as patches
+from radscan import RSImage, ROI, Calibration
+from radscan.workflow import analyze_simple_roi, analyze_simple_image, analyze_image, analyze_roi
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ def main(args=None):
     """
 
     # Setup logging to show debug info
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     # Filenames and directories
 
@@ -49,6 +50,11 @@ def main(args=None):
     # Calibration file, which is a pickle file containing the calibration data.
     # It is also possible to use the Calibration class to make a new set, but here we assume this is already done.
     calibration_file = "./resources/ebt_calibration_lot03172103_RED.pkl"
+    channel = 0
+
+    # plot calibration curve:
+    # calibration = Calibration.load(calibration_file)
+    # calibration.plot(save="calibration_curve_RED.png")
 
     # Load images
     pre_image = RSImage([os.path.join(data_dir, fn) for fn in pre_filenames])
@@ -67,19 +73,58 @@ def main(args=None):
 
     # Simple analysis by ROI, which means, each ROI an average dose is calculated:
     results_by_roi = analyze_simple_roi(
-        pre_image, post_image, calibration_file)
-    print(f"Results by ROI: {results_by_roi}")
+        pre_image, post_image, calibration_file, channel)
+    for idx, dose in enumerate(results_by_roi):
+        logger.info(f"ROI {idx+1}: {dose:.2f} Gy")
 
     # But alternatively, we can also do a full image analysis, which means, the full post_image is converted from pixel_values to dose:
-    results_by_image = analyze_simple_image(
-        pre_image, post_image, calibration_file)
+    results_by_image_netod = analyze_simple_image(
+        pre_image, post_image, channel=channel)
+    results_by_image_dose = analyze_simple_image(
+        pre_image, post_image, calibration_file, channel)
 
+    print(pre_image.rois)
+
+    # exit()
+
+    # Plot the full-image dose map
+    # plot_results(results_by_image_netod, dpi=300,
+    #             pixel_size=0.1, rois=roi_post.rois, vmax=1.0)
+    # plot_results(results_by_image_dose, dpi=300,
+    #              pixel_size=0.1, rois=roi_post.rois)
     # Plot the full-image dose map and save it to file
-    plot_results(results_by_image, dpi=300, pixel_size=0.1,
-                 save="dose_distribution.png")
+    # plot_results(results_by_image, dpi=300, pixel_size=0.1,
+    #             save="dose_distribution.png")
+
+    # now let us try the complicated method, here you also need background and control images.
+    # background_image = RSImage([os.path.join(data_dir, "background.tif")])
+    # control_pre_image = RSImage([os.path.join(data_dir, "control_pre.tif")])
+    # control_post_image = RSImage([os.path.join(data_dir, "control_post.tif")])
+
+    back_filenames = ["img20230504_09342060.tif",
+                      "img20230504_09344731.tif",
+                      "img20230504_09351256.tif",
+                      "img20230504_09353762.tif"]
+    background_image = RSImage([os.path.join(data_dir, fn)
+                               for fn in back_filenames])
+
+    # for the control images we will use the pre image for both pre and post control images.
+    control_pre_image = pre_image
+    control_post_image = pre_image
+
+    roi_background_filename = "RoiSet_back.zip"
+    roi_back = ROI(os.path.join(data_dir, roi_background_filename))
+    background_image.rois = roi_back.rois
+
+    # pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
+    results_by_image_netod = analyze_image(pre_image, post_image, control_pre_image,
+                                           control_post_image, background_image, calibration_file, channel)
+    # Plot the full-image dose map
+    plot_results(results_by_image_netod, dpi=300,
+                 pixel_size=0.1, rois=roi_post.rois, vmax=22.0)
 
 
-def plot_results(results, dpi, pixel_size, plot_type="image", save=None):
+def plot_results(results, dpi, pixel_size, plot_type="image", save=None, rois=None, vmax=None):
     """
     Function to plot results of the analysis.
 
@@ -96,16 +141,34 @@ def plot_results(results, dpi, pixel_size, plot_type="image", save=None):
     height_in_mm = results.shape[0] * pixel_size
     width_in_mm = results.shape[1] * pixel_size
 
+    if not vmax:
+        vmax = results.max()
+        print(vmax)
+        print(results.min())
+        print(results.shape)
+
     if plot_type == "image":
-        # Plot the full 2D dose map
-        plt.imshow(results, vmin=0.0, vmax=22.0, cmap="gist_ncar")
+        # Set vmin and vmax based on actual min/max values of the results array
+
+        # Plot the full 2D dose map with proper vmin and vmax
+        plt.imshow(results, vmin=0, vmax=vmax, cmap="gist_ncar")
         cb = plt.colorbar()
         cb.set_label("Dose [Gy]")
+
         plt.xlabel(f"X axis [pixels]")
         plt.ylabel(f"Y axis [pixels]")
         # TODO: set axis scales to mm instead of pixels
         plt.title("Dose Distribution")
         plt.gca().set_aspect('auto')
+        # Plot ROI rectangles
+        if rois:
+            for idx, (xmin, xmax, ymin, ymax) in enumerate(rois):
+                rect = patches.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
+                                         linewidth=2, edgecolor='r', facecolor='none')
+                plt.gca().add_patch(rect)
+                # Add ROI index to the center of the rectangle
+                plt.text((xmin + xmax) / 2, (ymin + ymax) / 2, f"ROI {idx+1}",
+                         color='red', ha='center', va='center', fontsize=8, fontweight='bold')
 
     elif plot_type == "roi":
         # Plot ROI-based dose results as a bar chart

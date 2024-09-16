@@ -7,7 +7,7 @@ from radscan import RSImage, Calibration, NetOD
 logger = logging.getLogger(__name__)
 
 
-def analyze_simple_roi(pre_image, post_image, calibration_file=None):
+def analyze_simple_roi(pre_image, post_image, calibration_file=None, channel=0):
     """
     Analyze the pre- and post-irradiation images by ROIs and return NetOD or dose (without background or control).
 
@@ -37,8 +37,9 @@ def analyze_simple_roi(pre_image, post_image, calibration_file=None):
         raise ValueError(
             "Mismatched ROI counts in pre- and post-irradiation images.")
 
-    pre_values = pre_image.analyze()
-    post_values = post_image.analyze()
+    pre_values = pre_image.analyze(channel=channel)
+    post_values = post_image.analyze(channel=channel)
+    # pre and post contains the mean, stderr, min, and max values for each ROI.
 
     netod_values = []
     for pre_value, post_value in zip(pre_values, post_values):
@@ -51,7 +52,7 @@ def analyze_simple_roi(pre_image, post_image, calibration_file=None):
     return [calibration.dose(netod) for netod in netod_values] if calibration else netod_values
 
 
-def analyze_simple_image(pre_image, post_image, calibration_file=None):
+def analyze_simple_image(pre_image, post_image, calibration_file=None, channel=0):
     """
     Analyze the entire post-irradiation image and return NetOD or dose (without background or control).
 
@@ -65,9 +66,10 @@ def analyze_simple_image(pre_image, post_image, calibration_file=None):
     """
     # Analyze pre-irradiation image and average their results over all attached ROIs
     pre_value = pre_image.analyze(single=True)
+    print(pre_value[0])
 
     # Calculate 2D NetOD using the scalar from pre-image and 2D pixel values from post-image
-    netod, _ = NetOD.simple(pre_value[0], post_image.image)
+    netod, _ = NetOD.simple(pre_value[0], post_image.image[:, :, channel])
 
     # Load calibration file if provided and convert NetOD to dose
     calibration = Calibration.load(
@@ -76,7 +78,7 @@ def analyze_simple_image(pre_image, post_image, calibration_file=None):
     return calibration.dose(netod) if calibration else netod
 
 
-def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None):
+def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
     """
     Analyze the pre and post-irradiation images along with control and background,
     convert pixel values to NetOD or dose, and return a list of results for each ROI.
@@ -138,7 +140,7 @@ def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, ba
         return netod_values
 
 
-def analyze_image(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None):
+def analyze_image(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
     """
     Analyze the entire post-irradiation image along with control and background,
     convert pixel values to NetOD or dose, and return a 2D array of results.
@@ -169,7 +171,7 @@ def analyze_image(pre_image, post_image, control_pre_image, control_post_image, 
 
     # Analyze the full post-irradiation image (2D array)
     # Placeholder for post_image stderr
-    post_image_values, spva = post_image.image, 0
+    post_image_values, spva = post_image.image[:, :, channel], 0
 
     # Calculate 2D NetOD using the scalars from pre, control, and background images and the 2D post-irradiation values
     netod, _ = NetOD.calc(pre_value, post_image_values,
