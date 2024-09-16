@@ -47,9 +47,12 @@ def analyze_simple_roi(pre_image, post_image, calibration_file=None, channel=0):
             pre_value[0], post_value[0], pre_value[1], post_value[1])
         netod_values.append(netod)
 
-    calibration = Calibration.load(
-        calibration_file) if calibration_file else None
-    return [calibration.dose(netod) for netod in netod_values] if calibration else netod_values
+    # If calibration is provided, convert NetOD to dose
+    if calibration_file:
+        calibration = Calibration.load(calibration_file)
+        return [calibration.dose(netod) for netod in netod_values]
+    else:
+        return netod_values
 
 
 def analyze_simple_image(pre_image, post_image, calibration_file=None, channel=0):
@@ -72,10 +75,11 @@ def analyze_simple_image(pre_image, post_image, calibration_file=None, channel=0
     netod, _ = NetOD.simple(pre_value[0], post_image.image[:, :, channel])
 
     # Load calibration file if provided and convert NetOD to dose
-    calibration = Calibration.load(
-        calibration_file) if calibration_file else None
-
-    return calibration.dose(netod) if calibration else netod
+    if calibration_file:
+        calibration = Calibration.load(calibration_file)
+        return calibration.dose(netod)
+    else:
+        return netod
 
 
 def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
@@ -131,11 +135,9 @@ def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, ba
         netod_values.append(netod)
 
     # If calibration is provided, convert NetOD to dose
-    calibration = Calibration.load(
-        calibration_file) if calibration_file else None
-    if calibration:
-        dose_values = [calibration.dose(netod) for netod in netod_values]
-        return dose_values
+    if calibration_file:
+        calibration = Calibration.load(calibration_file)
+        return [calibration.dose(netod) for netod in netod_values]
     else:
         return netod_values
 
@@ -179,7 +181,8 @@ def analyze_image(pre_image, post_image, control_pre_image, control_post_image, 
                           background_value, spvb, spva, spvcb, spvca, spvbk)
 
     # Load calibration file if provided and convert NetOD to dose
-    calibration = Calibration.load(
-        calibration_file) if calibration_file else None
-
-    return calibration.dose(netod) if calibration else netod
+    if calibration_file:
+        calibration = Calibration.load(calibration_file)
+        return calibration.dose(netod)
+    else:
+        return netod

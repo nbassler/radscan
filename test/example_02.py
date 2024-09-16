@@ -122,8 +122,10 @@ def main(args=None):
     results_by_roi = analyze_roi(pre_image, post_image, control_pre_image,
                                  control_post_image, background_image,
                                  calibration_file, channel)
+    # check against nominal doses:
+    dose_nominal = [12, 20, 2, 8, 2, 20, 4, 12, 4, 0]
     for idx, dose in enumerate(results_by_roi):
-        logger.info(f"ROI {idx+1}: {dose:.2f} Gy")
+        logger.info(f"ROI {idx+1:02}: {dose_nominal[idx]:8.2f} {dose:8.2f} Gy")
 
     # But alternatively, we can also do a full image analysis,
     # which means, the full post_image is converted from pixel_values to dose, using the calibration curve:

@@ -49,7 +49,6 @@ class Calibration:
         self.lot = lot  # Lot number (string, may start with 0)
         self.date = date  # Calibration date
         self.channel = channel  # Color channel used
-        self.channelstr = ('RED', 'GREEN', 'BLUE')
 
         # Fit the calibration curve to the data (NetOD vs. Dose)
         self.fitparams, _ = curve_fit(self.func, nods, ds, p0=guess)
