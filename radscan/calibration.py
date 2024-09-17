@@ -72,19 +72,6 @@ class Calibration:
             logging.debug(f"Saving calibration to {filename}")
             pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def dose(self, netOD):
-        """
-        Calculates the dose (in Gy) for a given NetOD value using the fitted calibration curve.
-
-        Args:
-            netOD (float or np.ndarray): The NetOD value(s) to convert to dose. Can be a scalar or an array.
-
-        Returns:
-            float or np.ndarray: The corresponding dose in Gy.
-        """
-        netOD = np.asarray(netOD)
-        return self.func(netOD, *self.fitparams)
-
     def plot(self, netODmin=0, netODmax=1.1, save=None):
         """
         Plots the calibration curve based on the fitted parameters.

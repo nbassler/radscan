@@ -27,7 +27,8 @@ class NetOD:
 
     Usage:
     - When using a Region of Interest (ROI), both `pvb` and `pva` should be scalars.
-    - When converting an entire image, `pva` should be a 2D array while other values (e.g., `pvb`, `pvcb`, `pvca`) are scalars.
+    - When converting an entire image, `pva` should be a 2D array while other values
+      (e.g., `pvb`, `pvcb`, `pvca`) are scalars.
     """
 
     def __init__(self, pvb, pva, pvcb=None, pvca=None, pvbk=None,
