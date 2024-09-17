@@ -6,25 +6,22 @@ build-backend = "setuptools.build_meta"
 name = "radscan"
 version = "0.1.0"
 description = "RadScan - A Python package for dose calculation and calibration using EBT films"
-authors = [{name = "Niels Bassler", email = "nbassler@users.noreply.github.com"}]
-license = {text = "MIT"}
+authors = [
+    { name = "Niels Bassler", email = "nbassler@users.noreply.github.com" },
+]
+license = { text = "MIT" }
 readme = "README.md"
 dependencies = [
     "numpy>=1.21",
     "tifffile>=2021.7.2",
     "roifile>=1.0.1",
-    "scipy>=1.7.0"
+    "scipy>=1.7.0",
 ]
 
 [project.optional-dependencies]
-plotting = [
-    "matplotlib>=3.4"
-]
+plotting = ["matplotlib>=3.4"]
 
-dev = [
-    "flake8>=6.0.0",
-    "pytest>=7.2.1"
-]
+dev = ["flake8>=6.0.0", "pytest>=7.2.1"]
 
 [tool.setuptools]
 packages = ["radscan"]
