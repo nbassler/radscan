@@ -1,7 +1,6 @@
-import os
 import logging
 
-from radscan import RSImage, Calibration, NetOD
+from radscan import Calibration, NetOD
 
 
 logger = logging.getLogger(__name__)
@@ -82,7 +81,9 @@ def analyze_simple_image(pre_image, post_image, calibration_file=None, channel=0
         return netod
 
 
-def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
+def analyze_roi(pre_image, post_image,
+                control_pre_image, control_post_image, background_image,
+                calibration_file=None, channel=0):
     """
     Analyze the pre and post-irradiation images along with control and background,
     convert pixel values to NetOD or dose, and return a list of results for each ROI.
@@ -142,7 +143,9 @@ def analyze_roi(pre_image, post_image, control_pre_image, control_post_image, ba
         return netod_values
 
 
-def analyze_image(pre_image, post_image, control_pre_image, control_post_image, background_image, calibration_file=None, channel=0):
+def analyze_image(pre_image, post_image,
+                  control_pre_image, control_post_image, background_image,
+                  calibration_file=None, channel=0):
     """
     Analyze the entire post-irradiation image along with control and background,
     convert pixel values to NetOD or dose, and return a 2D array of results.

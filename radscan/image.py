@@ -33,7 +33,8 @@ class RSImage:
 
     def __init__(self, fn, rois=None):
         """
-        Initializes the RSImage class by loading one or more TIFF images, extracting metadata, and optionally setting ROIs.
+        Initializes the RSImage class by loading one or more TIFF images, extracting metadata,
+        and optionally setting ROIs.
 
         Args:
             fn (str or list): The path to the TIFF image file, or a list of file paths to average.

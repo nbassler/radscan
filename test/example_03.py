@@ -150,8 +150,8 @@ def plot_results(results, dpi, pixel_size, plot_type="image", save=None, rois=No
     """
 
     # TODO: Convert pixel indices to mm using the pixel size
-    height_in_mm = results.shape[0] * pixel_size
-    width_in_mm = results.shape[1] * pixel_size
+    # height_in_mm = results.shape[0] * pixel_size
+    # width_in_mm = results.shape[1] * pixel_size
 
     if not vmax:
         vmax = results.max()  # TODO: eliminate NaN values from results array
@@ -162,8 +162,8 @@ def plot_results(results, dpi, pixel_size, plot_type="image", save=None, rois=No
         cb = plt.colorbar()
         cb.set_label("NetOD []")
 
-        plt.xlabel(f"X axis [pixels]")
-        plt.ylabel(f"Y axis [pixels]")
+        plt.xlabel("X axis [pixels]")
+        plt.ylabel("Y axis [pixels]")
         # TODO: set axis scales to mm instead of pixels
         plt.title("Dose Distribution")
         plt.gca().set_aspect('auto')

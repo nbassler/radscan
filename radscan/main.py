@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-import os
+# import os
 import sys
 import logging
 
 # Import necessary modules from the RadScan package
-from radscan.calibration import Calibration
-from radscan.image import RSImage
+# from radscan import RSImage, ROI
+# from radscan import Calibration # only needed if we want to plot the calibration curve
+# from radscan.workflow import analyze_simple_image, analyze_simple_roi
 
 
 logger = logging.getLogger(__name__)
@@ -18,25 +19,12 @@ def main(args=None):
     Users can extend this script to add more functionality as needed.
     """
 
-    # Load example resources
-    resources_dir = os.path.join(os.path.dirname(__file__), '../resources')
-    example_tiff = os.path.join(resources_dir, 'example_scan.tif')
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
 
-    print(resources_dir)
+    logger.info("Starting RadScan tool...")
 
-    # Load the TIFF image
-    # image = RSImage(example_tiff)
-
-    # Analyze the image (placeholder for user)
-    # result = image.analyze(roi=(50, 100, 50, 100))
-    # print(f"Analysis result: {result}")
-
-    # Load an existing calibration (if available)
-    calibration_file = os.path.join(
-        resources_dir, 'ebt_calibration_lot03172103_RED.pkl')
-    calibration = Calibration.load(calibration_file)
-
-    print(calibration.lot)
+    return 0
 
 
 if __name__ == '__main__':

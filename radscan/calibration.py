@@ -52,7 +52,8 @@ class Calibration:
 
         # Fit the calibration curve to the data (NetOD vs. Dose)
         self.fitparams, _ = curve_fit(self.func, nods, ds, p0=guess)
-        self.fitstr = f"Fit Dw = {self.fitparams[0]:.3f} * netOD + {self.fitparams[1]:.3f} * netOD^{self.fitparams[2]:.3f}"
+        self.fitstr = f"Fit Dw = {self.fitparams[0]:.3f} * netOD + {self.fitparams[1]:.3f} * \
+            netOD^{self.fitparams[2]:.3f}"
 
     def save(self, filename=None):
         """
